@@ -3,12 +3,19 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import '../domain/models/pet.dart';
+import '../domain/models/pet_colors.dart';
 
 class FullBodyDragonWidget extends StatefulWidget {
   final PetMood mood;
   final double size;
+  final PetColors? customColors;
 
-  const FullBodyDragonWidget({Key? key, required this.mood, this.size = 300.0}) : super(key: key);
+  const FullBodyDragonWidget({
+    Key? key,
+    required this.mood,
+    this.size = 300.0,
+    this.customColors,
+  }) : super(key: key);
 
   @override
   State<FullBodyDragonWidget> createState() => _FullBodyDragonWidgetState();
@@ -75,9 +82,10 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
   @override
   Widget build(BuildContext context) {
     // PALETA DO DRAGÃO
-    final mainColor = const Color(0xFF4CAF50); // Verde vibrante
-    final bellyColor = const Color(0xFFC6FF00); // Verde limão
-    final outlineColor = const Color(0xFF2E7D32); // Verde escuro
+    final colors = widget.customColors ?? PetColors.defaultDragon;
+    final mainColor = colors.primaryColor;
+    final bellyColor = colors.secondaryColor;
+    final outlineColor = colors.outlineColor;
     
     final headSize = widget.size * 0.6;
 

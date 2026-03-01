@@ -3,15 +3,18 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import '../domain/models/pet.dart';
+import '../domain/models/pet_colors.dart';
 
 class FullBodyDogWidget extends StatefulWidget {
   final PetMood mood;
   final double size;
+  final PetColors? customColors;
 
   const FullBodyDogWidget({
     Key? key,
     required this.mood,
     this.size = 300.0,
+    this.customColors,
   }) : super(key: key);
 
   @override
@@ -74,9 +77,10 @@ class _FullBodyDogWidgetState extends State<FullBodyDogWidget> with TickerProvid
   @override
   Widget build(BuildContext context) {
     // --- PALETA DE CORES DO CACHORRO ---
-    final mainColor = const Color(0xFFD48F3B); // Marrom caramelo
-    final secondaryColor = const Color(0xFFFFCB80); // Focinho/Barriga mais claro
-    final outlineColor = const Color(0xFF8F572A); // Contorno marrom escuro
+    final colors = widget.customColors ?? PetColors.defaultDog;
+    final mainColor = colors.primaryColor;
+    final secondaryColor = colors.secondaryColor;
+    final outlineColor = colors.outlineColor;
     
     double eyeHeight = widget.mood == PetMood.happy ? 12.0 : (widget.mood == PetMood.sad ? 32.0 : 24.0);
     bool showTongue = widget.mood == PetMood.happy;

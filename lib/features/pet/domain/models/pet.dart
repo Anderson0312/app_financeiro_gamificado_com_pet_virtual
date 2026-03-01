@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../onboarding/domain/models/pet_species.dart';
+import 'pet_colors.dart';
 
 /// Estágio de evolução do pet.
 enum PetStage { egg, baby, child, teenager, adult }
@@ -18,6 +19,7 @@ class Pet extends Equatable {
     this.mood = PetMood.neutral,
     this.xp = 0,
     this.unlockedAccessories = const [],
+    this.customColors,
   });
 
   final String id;
@@ -27,6 +29,7 @@ class Pet extends Equatable {
   final PetMood mood;
   final int xp;
   final List<String> unlockedAccessories;
+  final PetColors? customColors;
 
   Pet copyWith({
     String? id,
@@ -36,6 +39,7 @@ class Pet extends Equatable {
     PetMood? mood,
     int? xp,
     List<String>? unlockedAccessories,
+    PetColors? customColors,
   }) {
     return Pet(
       id: id ?? this.id,
@@ -45,6 +49,7 @@ class Pet extends Equatable {
       mood: mood ?? this.mood,
       xp: xp ?? this.xp,
       unlockedAccessories: unlockedAccessories ?? this.unlockedAccessories,
+      customColors: customColors ?? this.customColors,
     );
   }
 
@@ -56,6 +61,7 @@ class Pet extends Equatable {
         'mood': mood.name,
         'xp': xp,
         'unlockedAccessories': unlockedAccessories,
+        'customColors': customColors?.toJson(),
       };
 
   factory Pet.fromJson(Map<String, dynamic> json) => Pet(
@@ -70,9 +76,12 @@ class Pet extends Equatable {
                 ?.map((e) => e as String)
                 .toList() ??
             [],
+        customColors: json['customColors'] != null
+            ? PetColors.fromJson(json['customColors'] as Map<String, dynamic>)
+            : null,
       );
 
   @override
   List<Object?> get props =>
-      [id, name, species, stage, mood, xp, unlockedAccessories];
+      [id, name, species, stage, mood, xp, unlockedAccessories, customColors];
 }

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/pet.dart';
 import '../../../onboarding/domain/models/pet_species.dart';
+import '../../petbody/pet_cat.dart' as cat_widget;
+import '../../petbody/pet_dog.dart';
+import '../../petbody/pet_dragon.dart';
+import '../../petbody/pet_capybara.dart';
 
 /// Widget que exibe a representação visual do pet baseada em espécie, estágio e humor.
 class PetAvatar extends StatelessWidget {
@@ -16,7 +20,7 @@ class PetAvatar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildAvatarPlaceholder(context),
+          _buildPetWidget(),
           const SizedBox(height: 8),
           Text(
             _moodLabel,
@@ -29,59 +33,45 @@ class PetAvatar extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarPlaceholder(BuildContext context) {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        color: _moodColor.withValues(alpha: 0.3),
-        shape: BoxShape.circle,
-        border: Border.all(color: _moodColor, width: 3),
-      ),
-      child: Icon(
-        _speciesIcon,
-        size: 64,
-        color: _speciesColor,
-      ),
-    );
-  }
-
-  IconData get _speciesIcon {
+  Widget _buildPetWidget() {
     switch (pet.species) {
-      case PetSpecies.dog:
-        return Icons.pets;
       case PetSpecies.cat:
-        return Icons.pets;
+        return cat_widget.FullBodyCatWidget(
+          mood: _convertToCatMood(pet.mood),
+          size: 200,
+          customColors: pet.customColors,
+        );
+      case PetSpecies.dog:
+        return FullBodyDogWidget(
+          mood: pet.mood,
+          size: 200,
+          customColors: pet.customColors,
+        );
       case PetSpecies.dragon:
-        return Icons.whatshot;
+        return FullBodyDragonWidget(
+          mood: pet.mood,
+          size: 200,
+          customColors: pet.customColors,
+        );
       case PetSpecies.capybara:
-        return Icons.face;
+        return FullBodyCapybaraWidget(
+          mood: pet.mood,
+          size: 200,
+          customColors: pet.customColors,
+        );
     }
   }
 
-  Color get _speciesColor {
-    switch (pet.species) {
-      case PetSpecies.dog:
-        return Colors.brown;
-      case PetSpecies.cat:
-        return Colors.orange;
-      case PetSpecies.dragon:
-        return Colors.deepOrange;
-      case PetSpecies.capybara:
-        return Colors.brown.shade700;
-    }
-  }
-
-  Color get _moodColor {
-    switch (pet.mood) {
+  // Converte PetMood (do modelo) para o enum do FullBodyCatWidget
+  cat_widget.PetMood _convertToCatMood(PetMood mood) {
+    switch (mood) {
       case PetMood.happy:
-        return Colors.green;
-      case PetMood.neutral:
-        return Colors.blue;
+        return cat_widget.PetMood.happy;
       case PetMood.sad:
-        return Colors.blueGrey;
       case PetMood.sick:
-        return Colors.red;
+        return cat_widget.PetMood.sad;
+      case PetMood.neutral:
+        return cat_widget.PetMood.idle;
     }
   }
 

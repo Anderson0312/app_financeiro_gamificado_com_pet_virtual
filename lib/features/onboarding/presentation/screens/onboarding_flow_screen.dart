@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../pet/data/pet_repository_impl.dart';
 import '../../../pet/presentation/providers/pet_provider.dart';
+import '../../../pet/domain/models/pet_colors.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../pet/domain/models/pet.dart';
 import '../../../user/data/user_repository_impl.dart';
@@ -12,6 +13,7 @@ import '../../domain/models/pet_species.dart';
 import 'onboarding_complete_screen.dart';
 import 'pet_naming_screen.dart';
 import 'pet_selection_screen.dart';
+import 'pet_color_selection_screen.dart';
 import 'welcome_screen.dart';
 
 /// Orquestra o fluxo completo do onboarding.
@@ -29,6 +31,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   int _step = 0;
   PetSpecies? _selectedSpecies;
   String? _petName;
+  PetColors? _selectedColors;
 
   void _completeOnboarding() async {
     if (_selectedSpecies == null || _petName == null) return;
@@ -43,6 +46,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       stage: PetStage.baby,
       mood: PetMood.neutral,
       xp: 0,
+      customColors: _selectedColors,
     );
 
     final user = User(
@@ -79,16 +83,22 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           onNext: () => setState(() => _step = 2),
         );
       case 2:
+        return PetColorSelectionScreen(
+          species: _selectedSpecies!,
+          onColorSelected: (colors) => setState(() => _selectedColors = colors),
+          onNext: () => setState(() => _step = 3),
+        );
+      case 3:
         return PetNamingScreen(
           species: _selectedSpecies!,
           onComplete: (name) {
             setState(() {
               _petName = name;
-              _step = 3;
+              _step = 4;
             });
           },
         );
-      case 3:
+      case 4:
         return OnboardingCompleteScreen(
           petName: _petName!,
           species: _selectedSpecies!,

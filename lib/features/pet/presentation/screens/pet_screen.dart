@@ -36,6 +36,13 @@ class PetScreen extends ConsumerWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text(petWithMood.name),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.palette),
+                onPressed: () => context.push('/pet/customize-colors'),
+                tooltip: 'Personalizar cores',
+              ),
+            ],
           ),
           body: SafeArea(
             child: Column(
@@ -69,16 +76,29 @@ class _PetBodyBySpecies extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (pet.species) {
       case PetSpecies.dog:
-        return FullBodyDogWidget(mood: pet.mood, size: size);
+        return FullBodyDogWidget(
+          mood: pet.mood,
+          size: size,
+          customColors: pet.customColors,
+        );
       case PetSpecies.cat:
         return cat.FullBodyCatWidget(
           mood: _PetBodyBySpecies._mapToCatMood(pet.mood),
           size: size,
+          customColors: pet.customColors,
         );
       case PetSpecies.dragon:
-        return FullBodyDragonWidget(mood: pet.mood, size: size);
+        return FullBodyDragonWidget(
+          mood: pet.mood,
+          size: size,
+          customColors: pet.customColors,
+        );
       case PetSpecies.capybara:
-        return FullBodyCapybaraWidget(mood: pet.mood, size: size);
+        return FullBodyCapybaraWidget(
+          mood: pet.mood,
+          size: size,
+          customColors: pet.customColors,
+        );
     }
   }
 
@@ -90,7 +110,6 @@ class _PetBodyBySpecies extends StatelessWidget {
       case PetMood.sick:
         return cat.PetMood.sad;
       case PetMood.neutral:
-      default:
         return cat.PetMood.idle;
     }
   }

@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
 
+// Lembre-se de ajustar o import do PetColors caso necessário no seu projeto
+import '../domain/models/pet_colors.dart';
+
 enum PetMood { idle, happy, sad }
 
 class FullBodyCatWidget extends StatefulWidget {
   final PetMood mood;
   final double size;
+  final PetColors? customColors;
 
   const FullBodyCatWidget({
     Key? key,
-    this.mood = PetMood.idle,
-    this.size = 300.0,
+    required this.mood,
+    this.size = 320,
+    this.customColors,
   }) : super(key: key);
 
   @override
@@ -19,348 +24,206 @@ class FullBodyCatWidget extends StatefulWidget {
 }
 
 class _FullBodyCatWidgetState extends State<FullBodyCatWidget> with TickerProviderStateMixin {
-  // Controladores de Movimento Contínuo
-  late AnimationController _breathingController;
-  late AnimationController _tailController;
-  
-  // Controladores de Ação Específica
-  late AnimationController _jumpController;
-  late AnimationController _blinkController;
-  
-  late Animation<double> _tailAnimation;
+  late AnimationController _breath;
+  late AnimationController _jump;
+  late AnimationController _blink;
+  late AnimationController _tail;
   Timer? _blinkTimer;
+
+  // Espessura do contorno global
+  final double _strokeW = 1.5; 
 
   @override
   void initState() {
     super.initState();
-    
-    // 1. Respiração (Timing suave e orgânico)
-    _breathingController = AnimationController(
+
+    _breath = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
 
-    // 2. Rabo (Ação Secundária)
-    _tailController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-
-    _tailAnimation = Tween<double>(begin: -0.2, end: 0.2).animate(
-      CurvedAnimation(parent: _tailController, curve: Curves.easeInOutSine),
-    );
-
-    // 3. Sistema de Pulo (Squash & Stretch)
-    _jumpController = AnimationController(
+    _jump = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
-    // 4. Sistema de Piscar (Life-like)
-    _blinkController = AnimationController(
+    _blink = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 160),
     );
+
+    _tail = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
 
     _startBlinking();
   }
 
-  // Lógica de piscar orgânico (intervalos aleatórios)
   void _startBlinking() {
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
-      if (math.Random().nextBool() && widget.mood != PetMood.sad) {
-        _blinkController.forward().then((_) => _blinkController.reverse());
+    _blinkTimer = Timer.periodic(const Duration(milliseconds: 3200), (timer) {
+      if (mounted && math.Random().nextBool() && widget.mood != PetMood.sad) {
+        _blink.forward().then((_) => _blink.reverse());
       }
     });
   }
 
   @override
   void dispose() {
+    _breath.dispose();
+    _jump.dispose();
+    _blink.dispose();
+    _tail.dispose();
     _blinkTimer?.cancel();
-    _breathingController.dispose();
-    _tailController.dispose();
-    _jumpController.dispose();
-    _blinkController.dispose();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant FullBodyCatWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
-    // Dispara a animação de pulo elástico se ficou feliz
     if (widget.mood == PetMood.happy && oldWidget.mood != PetMood.happy) {
-      _jumpController.forward(from: 0.0).then((_) {
-         // Opcional: fazer ele pular algumas vezes
-         _jumpController.reverse();
-      });
-      _tailController.duration = const Duration(milliseconds: 400); // Rabo elétrico
-    } 
-    // Ajustes para estado Triste
-    else if (widget.mood == PetMood.sad) {
-      _tailController.duration = const Duration(milliseconds: 2500); // Rabo desanimado
-    } 
-    // Volta ao Normal
-    else {
-      _tailController.duration = const Duration(milliseconds: 1200);
-    }
-    
-    if(_tailController.isAnimating) {
-        _tailController.repeat(reverse: true);
+      _jump.forward(from: 0).then((_) => _jump.reverse());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- LINGUAGEM VISUAL "DUOLINGO" (Saturado, Flat, Contornos Fortes) ---
-    Color mainColor;
-    Color bellyColor;
-    Color outlineColor;
+    final colors = widget.customColors ?? PetColors.defaultCat;
+    final outline = colors.outlineColor;
     
-    double eyeHeight, eyeWidth;
-    double earAngleDrop = 0.0;
-    bool showTear = widget.mood == PetMood.sad;
-    bool showStar = widget.mood == PetMood.happy;
-
-    switch (widget.mood) {
-      case PetMood.happy:
-        mainColor = const Color(0xFFFF9600); // Laranja Super Vibrante
-        bellyColor = const Color(0xFFFFD579);
-        outlineColor = const Color(0xFFC77100); // Contorno escuro para dar volume flat
-        eyeHeight = 12.0; eyeWidth = 28.0; 
-        break;
-      case PetMood.sad:
-        mainColor = const Color(0xFF5CC6D0); // Azul ciano triste, mas amigável
-        bellyColor = const Color(0xFFA6E3E9);
-        outlineColor = const Color(0xFF3BA1AB);
-        eyeHeight = 35.0; eyeWidth = 24.0;
-        earAngleDrop = 0.4; // Orelhas caem dramaticamente
-        break;
-      case PetMood.idle:
-      default:
-        mainColor = const Color(0xFFFFAB00); 
-        bellyColor = const Color(0xFFFFE599);
-        outlineColor = const Color(0xFFD68F00);
-        eyeHeight = 26.0; eyeWidth = 22.0; 
-        break;
-    }
-
-    // Proporções: Cabeça gigante, corpo pequeno (Mascote Premium)
-    final headSize = widget.size * 0.65;
-    final bodyWidth = widget.size * 0.45;
-    final bodyHeight = widget.size * 0.50;
+    final headH = widget.size * 0.56;
+    final headW = widget.size * 0.68;
+    final bodyH = widget.size * 0.49;
+    final bodyW = widget.size * 0.55;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([
-        _breathingController, 
-        _tailController, 
-        _jumpController,
-        _blinkController
-      ]),
+      animation: Listenable.merge([_breath, _jump, _blink, _tail]),
       builder: (context, child) {
-        // --- CÁLCULOS DE MOTION DESIGN ---
-        
-        // 1. Respiração (Mais profunda se triste, mais elétrica se feliz)
-        double breathIntensity = widget.mood == PetMood.sad ? 0.05 : 0.02;
-        final breathScaleY = 1.0 + (_breathingController.value * breathIntensity);
-        final breathScaleX = 1.0 + (_breathingController.value * (breathIntensity / 2));
-
-        // 2. Animação de Pulo (Squash & Stretch via Curvas)
-        // Usa elasticOut para dar aquele "bounce" estilo gelatina quando aterrissa
-        final jumpValue = Curves.elasticOut.transform(_jumpController.value);
-        final jumpY = -40.0 * math.sin(jumpValue * math.pi); // Sobe e desce
-        
-        // Achatamento durante o pulo
-        double jumpScaleY = 1.0;
-        double jumpScaleX = 1.0;
-        if (_jumpController.isAnimating) {
-           jumpScaleY = 1.0 + (math.sin(jumpValue * math.pi) * 0.1); // Estica ao subir
-           jumpScaleX = 1.0 - (math.sin(jumpValue * math.pi) * 0.05); // Afina ao subir
-        }
-
-        // 3. Olhos Piscando
-        final currentEyeHeight = eyeHeight * (1.0 - _blinkController.value);
+        final jumpY = -25 * math.sin(_jump.value * math.pi);
+        final breathScale = 1 + (_breath.value * 0.03);
 
         return Transform.translate(
           offset: Offset(0, jumpY),
-          child: Transform.scale(
-            scaleY: breathScaleY * jumpScaleY,
-            scaleX: breathScaleX * jumpScaleX,
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: widget.size,
-              height: widget.size,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  // --- CAMADA 1: O RABO ---
-                  Positioned(
-                    bottom: bodyHeight * 0.25,
-                    left: (widget.size / 2) + (bodyWidth / 3.5), 
-                    child: Transform.rotate(
-                      angle: _tailAnimation.value * (widget.mood == PetMood.sad ? 0.3 : 1.5),
-                      alignment: Alignment.bottomLeft,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        width: 28,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          color: mainColor,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: outlineColor, width: 3.5)
-                        ),
-                      ),
-                    ),
-                  ),
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              clipBehavior: Clip.none,
+              children: [
 
-                  // --- CAMADA 2: CORPO ---
-                  Positioned(
-                    bottom: 10, 
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      width: bodyWidth,
-                      height: bodyHeight,
-                      decoration: BoxDecoration(
-                        color: mainColor,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(80), 
-                          bottom: Radius.circular(40)
-                        ),
-                        border: Border.all(color: outlineColor, width: 3.5),
-                      ),
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: AnimatedContainer(
-                             duration: const Duration(milliseconds: 400),
-                             width: bodyWidth * 0.65,
-                             height: bodyHeight * 0.55,
-                             decoration: BoxDecoration(
-                               color: bellyColor,
-                               borderRadius: BorderRadius.circular(40)
-                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                /// TAIL
+                Positioned(
+                  bottom: widget.size * 0.06, // Mais para baixo, perto da base
+                  right: widget.size * 0.1,  // Ligeiramente para a direita
+                  child: _buildTail(colors.primaryColor, outline),
+                ),
 
-                  // Patas (Traseiras e Dianteiras unificadas visualmente para manter flat)
-                  Positioned(
-                      bottom: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                /// BODY + PATINHAS
+                Positioned(
+                  bottom: widget.size * 0.05,
+                  child: Transform.scale(
+                    scaleY: breathScale,
+                    child: _buildBodyWithPaws(bodyW, bodyH, colors.primaryColor, outline),
+                  ),
+                ),
+
+                /// HEAD
+                Positioned(
+                  top: widget.size * 0.05,
+                  child: Transform.translate(
+                    offset: Offset(0, _breath.value * 4), 
+                    child: SizedBox(
+                      width: headW,
+                      height: headH * 1.5, 
+                      child: Stack(
+                        alignment: Alignment.topCenter,
+                        clipBehavior: Clip.none,
                         children: [
-                           _buildPaw(mainColor, outlineColor),
-                           SizedBox(width: bodyWidth * 0.25),
-                           _buildPaw(mainColor, outlineColor),
-                        ],
-                      ),
-                  ),
+                    
+                          /// EARS - POSICIONAMENTO CORRIGIDO
+                          Positioned(
+                            top: headH * -0.25, // Ajustado levemente para cima
+                            left: -headW * 0.1, // 10% para fora da borda esquerda
+                            child: _buildEar(colors.primaryColor, outline, true),
+                          ),
 
-                  // --- CAMADA 3: CABEÇA ---
-                  Positioned(
-                    top: widget.size * 0.1, // Cabeça sobrepõe o corpo
-                    child: Transform.translate(
-                      // Cabeça mexe sutilmente com a respiração
-                      offset: Offset(0, _breathingController.value * 5),
-                      child: SizedBox(
-                        width: headSize,
-                        height: headSize * 0.9,
-                        child: Stack(
-                           alignment: Alignment.center,
-                           clipBehavior: Clip.none,
-                           children: [
-                             // Orelhas Animadas
-                             Positioned(
-                               top: -15, left: 15, 
-                               child: Transform.rotate(
-                                 angle: (-math.pi/5) - earAngleDrop, 
-                                 alignment: Alignment.bottomRight,
-                                 child: _buildEar(mainColor, outlineColor, headSize))),
-                             Positioned(
-                               top: -15, right: 15, 
-                               child: Transform.rotate(
-                                 angle: (math.pi/5) + earAngleDrop, 
-                                 alignment: Alignment.bottomLeft,
-                                 child: _buildEar(mainColor, outlineColor, headSize))),
-                             
-                             // Rosto Principal
-                             AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                width: headSize,
-                                height: headSize * 0.8,
-                                decoration: BoxDecoration(
-                                  color: mainColor,
-                                  borderRadius: BorderRadius.circular(headSize * 0.45),
-                                  border: Border.all(color: outlineColor, width: 3.5),
-                                  boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))
-                                  ]
-                                ),
-                             ),
+                          Positioned(
+                            top: headH * -0.25,
+                            right: -headW * 0.1, // 10% para fora da borda direita
+                            child: _buildEar(colors.primaryColor, outline, false),
+                          ),
 
-                             // Olhos
-                              Positioned(
-                                top: headSize * 0.35,
-                                child: SizedBox(
-                                  width: headSize * 0.55,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      _buildEye(eyeWidth, currentEyeHeight, showStar),
-                                      _buildEye(eyeWidth, currentEyeHeight, showStar),
-                                    ],
+                          /// HEAD SHAPE
+                          Positioned(
+                            top: headH * 0.35,
+                            child: Container(
+                              width: headW,
+                              height: headH,
+                              decoration: BoxDecoration(
+                                color: colors.primaryColor,
+                                borderRadius: BorderRadius.circular(200),
+                                border: Border.all(color: outline, width: _strokeW),
+                              ),
+                            ),
+                          ),
+                    
+                          /// EYES
+                          Positioned(
+                            top: headH * 0.65,
+                            child: SizedBox(
+                              width: headW * 0.6,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildKawaiiEye(),
+                                  _buildKawaiiEye(),
+                                ],
+                              ),
+                            ),
+                          ),
+                    
+                          /// WHISKERS
+                          Positioned(
+                            top: headH * 0.80,
+                            child: SizedBox(
+                              width: headW * 1.1,
+                              child: Stack(
+                                children: [
+                                  _buildWhiskers(true, outline),
+                                  _buildWhiskers(false, outline),
+                                ],
+                              ),
+                            ),
+                          ),
+                    
+                          /// NOSE + MOUTH (:3)
+                          Positioned(
+                            top: headH * 0.95,
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 10,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.all(Radius.circular(10)),
                                   ),
                                 ),
-                              ),
-
-                              // Nariz e Boca
-                               Positioned(
-                                top: headSize * 0.52,
-                                 child: Column(
-                                   children: [
-                                     // Nariz Fofinho
-                                     Container(
-                                       width: 14, height: 8, 
-                                       decoration: BoxDecoration(color: const Color(0xFFFF7B93), borderRadius: BorderRadius.circular(10))
-                                     ),
-                                     const SizedBox(height: 6),
-                                     // Boca expressiva
-                                     AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      width: widget.mood == PetMood.happy ? 28 : 20,
-                                      height: widget.mood == PetMood.happy ? 16 : (widget.mood == PetMood.sad ? 12 : 8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF4A342E), // Marrom escuro quase preto
-                                        borderRadius: widget.mood == PetMood.sad
-                                            ? const BorderRadius.vertical(top: Radius.circular(20)) 
-                                            : const BorderRadius.vertical(bottom: Radius.circular(20)), 
-                                      ),
-                                 ),
-                                   ],
-                                 ),
-                               ),
-
-                             // Lágrima de Carete (Triste)
-                             if (showTear)
-                              Positioned(
-                                top: headSize * 0.5,
-                                left: headSize * 0.2,
-                                child: Container(
-                                  width: 12, height: 18, 
-                                  decoration: const BoxDecoration(color: Color(0xFF4AC6FF), borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)))
-                                ),
-                              ),
-                           ],
-                        ),
+                                const SizedBox(height: 2),
+                                CustomPaint(
+                                  size: const Size(28, 12),
+                                  painter: CatMouthPainter(outline, _strokeW),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -368,53 +231,306 @@ class _FullBodyCatWidgetState extends State<FullBodyCatWidget> with TickerProvid
     );
   }
 
-  // --- Widgets Auxiliares ---
-  Widget _buildEar(Color color, Color outlineColor, double headSize) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      width: headSize * 0.35,
-      height: headSize * 0.45,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(25), bottom: Radius.circular(10)),
-        border: Border.all(color: outlineColor, width: 3.5)
-      ),
-    );
-  }
-
-  Widget _buildEye(double width, double height, bool showStar) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      width: width,
-      // Garante que a altura nunca seja negativa
-      height: height < 0 ? 0 : height,
-      decoration: BoxDecoration(
-        color: const Color(0xFF332211), // Quase preto, bem marcado
-        borderRadius: BorderRadius.circular(20),
-      ),
-      // Adiciona o brilho nos olhos se estiver feliz e de olhos abertos
-      child: (showStar && height > 5) 
-          ? Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2, right: 3),
-                child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
-              ),
-            ) 
-          : null,
-    );
-  }
-
-  Widget _buildPaw(Color color, Color outlineColor) {
-     return AnimatedContainer(
-       duration: const Duration(milliseconds: 400),
-       width: 45,
-       height: 25,
-       decoration: BoxDecoration(
-         color: color,
-         borderRadius: const BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(10)),
-         border: Border.all(color: outlineColor, width: 3.5),
+  Widget _buildTail(Color color, Color outline) {
+     return Transform.rotate(
+       angle: 0.15 * math.sin(_tail.value * math.pi * 2), // Balanço um pouco maior
+       alignment: Alignment.bottomCenter, // Rotação a partir da base
+       child: CustomPaint(
+         size: const Size(80, 50), // Mudado para ser mais horizontal e largo na base
+         painter: CatTailPainter(color, outline, _strokeW),
        ),
      );
+   }
+
+  /// BODY + PATAS
+  Widget _buildBodyWithPaws(double w, double h, Color color, Color outline) {
+    return SizedBox(
+      width: w * 1.2, 
+      height: h,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+           // Patas Traseiras
+           Positioned(bottom: -5, left: w * 0.15, child: _buildPaw(color, outline, 30, 20)),
+           Positioned(bottom: -5, right: w * 0.15, child: _buildPaw(color, outline, 30, 20)),
+
+          // Torso
+          Container(
+            width: w,
+            height: h,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(color: outline, width: _strokeW),
+            ),
+            child: Stack(
+              children: [
+                Positioned(top: 25, left: 15, child: _spot()),
+                Positioned(bottom: 35, right: 20, child: _spot()),
+              ],
+            ),
+          ),
+
+          // Patas Dianteiras
+           Positioned(top: h * 0.4, left: w * 0.05, child: Transform.rotate(angle: 0.3, child: _buildPaw(color, outline, 22, 45))),
+           Positioned(top: h * 0.4, right: w * 0.05, child: Transform.rotate(angle: -0.3, child: _buildPaw(color, outline, 22, 45))),
+        ],
+      ),
+    );
   }
+
+  Widget _buildPaw(Color color, Color outline, double w, double h) {
+    return Container(
+      width: w, height: h,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20), border: Border.all(color: outline, width: _strokeW)),
+      child: Stack(
+        children: [
+          Positioned(bottom: 4, left: w * 0.2, child: Container(width: 2, height: 6, color: outline.withOpacity(0.5))),
+          Positioned(bottom: 4, left: w * 0.45, child: Container(width: 2, height: 8, color: outline.withOpacity(0.5))),
+          Positioned(bottom: 4, left: w * 0.7, child: Container(width: 2, height: 6, color: outline.withOpacity(0.5))),
+        ],
+      ),
+    );
+  }
+
+  Widget _spot() {
+    return Container(
+      width: 25, height: 16,
+      decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(20)),
+    );
+  }
+
+  /// KAWAII EYE
+  Widget _buildKawaiiEye() {
+    return AnimatedBuilder(
+      animation: _blink,
+      builder: (context, child) {
+        final height = 35 * (1 - _blink.value);
+        return Container(
+          width: 35,
+          height: height < 2 ? 2 : height,
+          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(50)),
+          child: height > 10 ? Stack(
+            children: [
+              Positioned(top: 5, left: 6, child: Container(width: 12, height: 12, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle))),
+              Positioned(bottom: 5, right: 6, child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle))),
+            ],
+          ) : null,
+        );
+      },
+    );
+  }
+
+  /// EARS (Com âncora ajustada para rotação natural)
+  Widget _buildEar(Color color, Color outline, bool left) {
+    double angle = 0.0;
+    // Ângulos aumentados para inclinar mais para fora (sentido oposto)
+    if (widget.mood == PetMood.happy) angle = left ? -0.3 : 0.3;
+    else if (widget.mood == PetMood.sad) angle = left ? -0.8 : 0.8;
+    else angle = left ? -0.5 : 0.5;
+
+    return Transform.rotate(
+      angle: angle,
+      // Âncora na base da orelha: direita para a orelha esquerda, e esquerda para a orelha direita
+      alignment: left ? Alignment.bottomRight : Alignment.bottomLeft,
+      child: CustomPaint(
+        size: const Size(90, 110), 
+        painter: ThickEarPainter(color, outline, Colors.pink[100]!, _strokeW),
+      ),
+    );
+  }
+
+  /// WHISKERS
+  Widget _buildWhiskers(bool left, Color color) {
+    return Align(
+      alignment: left ? Alignment.centerLeft : Alignment.centerRight,
+      child: Column(
+        children: List.generate(
+          3,
+          (i) => Transform.translate(
+            offset: Offset(0, math.sin((_breath.value + i) * 2 * math.pi) * 1.5),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: CustomPaint(
+                size: const Size(45, 12),
+                painter: CurvedWhiskerPainter(color, _strokeW, left),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CurvedWhiskerPainter extends CustomPainter {
+  final Color color;
+  final double strokeW;
+  final bool left;
+
+  CurvedWhiskerPainter(this.color, this.strokeW, this.left);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeW
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+
+    if (left) {
+      // começa na bochecha e sobe
+      path.moveTo(size.width, size.height * 0.6);
+      path.quadraticBezierTo(
+        size.width * 0.5,
+        -size.height * 0.4, // ponto acima
+        0,
+        size.height * 0.4,
+      );
+    } else {
+      path.moveTo(0, size.height * 0.6);
+      path.quadraticBezierTo(
+        size.width * 0.5,
+        -size.height * 0.4,
+        size.width,
+        size.height * 0.4,
+      );
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// --- PAINTER PARA A CAUDA DO GATO ---
+class CatTailPainter extends CustomPainter {
+  final Color color;
+  final Color outline;
+  final double strokeW;
+
+  CatTailPainter(this.color, this.outline, this.strokeW);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final paintOutline = Paint()
+      ..color = outline
+      ..strokeWidth = strokeW
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    // Início da cauda na base (esquerda inferior)
+    path.moveTo(size.width * 0.1, size.height * 0.9);
+    
+    // Curva principal da cauda para cima e para a direita
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      -size.height * 0.5, // Faz a cauda subir e curvar
+      size.width * 0.9,
+      size.height * 0.2,
+    );
+    
+    // Ponta arredondada da cauda
+    path.quadraticBezierTo(
+      size.width,
+      size.height * 0.4,
+      size.width * 0.8,
+      size.height * 0.6,
+    );
+    
+    // Volta para a base, mantendo a espessura
+    path.quadraticBezierTo(
+      size.width * 0.4,
+      size.height * 0.3,
+      0,
+      size.height * 0.8,
+    );
+    path.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawPath(path, paintOutline);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// --- PAINTER PARA A BOCA ":3" ---
+class CatMouthPainter extends CustomPainter {
+  final Color color;
+  final double strokeW;
+  CatMouthPainter(this.color, this.strokeW);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeW * 1.5 
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.2);
+    path.quadraticBezierTo(size.width * 0.25, size.height, size.width / 2, size.height * 0.2);
+    path.quadraticBezierTo(size.width * 0.75, size.height, size.width, size.height * 0.2);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// --- PAINTER PARA A ORELHA ---
+class ThickEarPainter extends CustomPainter {
+  final Color baseColor;
+  final Color outlineColor;
+  final Color innerPink;
+  final double strokeW;
+
+  ThickEarPainter(this.baseColor, this.outlineColor, this.innerPink, this.strokeW);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintBase = Paint()
+      ..color = baseColor
+      ..style = PaintingStyle.fill;
+      
+    final paintPink = Paint()
+      ..color = innerPink
+      ..style = PaintingStyle.fill;
+
+    final paintOutline = Paint()
+      ..color = outlineColor
+      ..strokeWidth = strokeW
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    path.moveTo(size.width * 0.1, size.height);
+    path.quadraticBezierTo(size.width * 0.5, -size.height * 0.1, size.width * 0.9, size.height);
+    path.close();
+
+    final innerPath = Path();
+    innerPath.moveTo(size.width * 0.3, size.height * 0.85);
+    innerPath.quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width * 0.7, size.height * 0.85);
+    innerPath.close();
+
+    canvas.drawPath(path, paintBase);
+    canvas.drawPath(innerPath, paintPink);
+    canvas.drawPath(path, paintOutline);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

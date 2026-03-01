@@ -17,4 +17,10 @@ class PetNotifier extends AsyncNotifier<Pet?> {
     await repo.savePet(pet);
     ref.invalidateSelf();
   }
+
+  Future<void> updatePet(Pet pet) async {
+    final repo = ref.read(petRepositoryProvider);
+    await repo.savePet(pet);
+    ref.invalidateSelf();
+  }
 }

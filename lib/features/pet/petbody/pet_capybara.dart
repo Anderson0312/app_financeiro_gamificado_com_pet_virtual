@@ -3,12 +3,19 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import '../domain/models/pet.dart';
+import '../domain/models/pet_colors.dart';
 
 class FullBodyCapybaraWidget extends StatefulWidget {
   final PetMood mood;
   final double size;
+  final PetColors? customColors;
 
-  const FullBodyCapybaraWidget({Key? key, required this.mood, this.size = 300.0}) : super(key: key);
+  const FullBodyCapybaraWidget({
+    Key? key,
+    required this.mood,
+    this.size = 300.0,
+    this.customColors,
+  }) : super(key: key);
 
   @override
   State<FullBodyCapybaraWidget> createState() => _FullBodyCapybaraWidgetState();
@@ -55,8 +62,9 @@ class _FullBodyCapybaraWidgetState extends State<FullBodyCapybaraWidget> with Ti
   @override
   Widget build(BuildContext context) {
     // PALETA DA CAPIVARA
-    final mainColor = const Color(0xFF8D6E63); // Marrom
-    final outlineColor = const Color(0xFF5D4037); // Marrom escuro
+    final colors = widget.customColors ?? PetColors.defaultCapybara;
+    final mainColor = colors.primaryColor;
+    final outlineColor = colors.outlineColor;
     
     // Forma muito mais quadrada
     final headWidth = widget.size * 0.7;

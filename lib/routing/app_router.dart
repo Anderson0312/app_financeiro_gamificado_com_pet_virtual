@@ -10,6 +10,7 @@ import '../features/finance/presentation/screens/transactions_screen.dart';
 import '../features/onboarding/presentation/providers/onboarding_provider.dart';
 import '../features/onboarding/presentation/screens/onboarding_flow_screen.dart';
 import '../features/pet/presentation/screens/pet_screen.dart';
+import '../features/pet/presentation/screens/pet_color_customization_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -59,6 +60,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/education',
         builder: (context, state) => const EducationPlaceholderScreen(),
+      ),
+      GoRoute(
+        path: '/pet/customize-colors',
+        builder: (context, state) => const PetColorCustomizationScreen(),
       ),
     ],
   );
