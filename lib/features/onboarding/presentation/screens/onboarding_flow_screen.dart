@@ -81,12 +81,14 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           selectedSpecies: _selectedSpecies,
           onSpeciesSelected: (s) => setState(() => _selectedSpecies = s),
           onNext: () => setState(() => _step = 2),
+          onBack: () => setState(() => _step = 0),
         );
       case 2:
         return PetColorSelectionScreen(
           species: _selectedSpecies!,
           onColorSelected: (colors) => setState(() => _selectedColors = colors),
           onNext: () => setState(() => _step = 3),
+          onBack: () => setState(() => _step = 1),
         );
       case 3:
         return PetNamingScreen(
@@ -97,6 +99,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
               _step = 4;
             });
           },
+          onBack: () => setState(() => _step = 2),
         );
       case 4:
         return OnboardingCompleteScreen(

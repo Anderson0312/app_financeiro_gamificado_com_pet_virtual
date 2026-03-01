@@ -8,10 +8,12 @@ class PetNamingScreen extends StatefulWidget {
     super.key,
     required this.species,
     required this.onComplete,
+    required this.onBack,
   });
 
   final PetSpecies species;
   final ValueChanged<String> onComplete;
+  final VoidCallback onBack;
 
   @override
   State<PetNamingScreen> createState() => _PetNamingScreenState();
@@ -30,7 +32,13 @@ class _PetNamingScreenState extends State<PetNamingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nome do pet')),
+      appBar: AppBar(
+        title: const Text('Nome do pet'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: widget.onBack,
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

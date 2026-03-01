@@ -9,16 +9,24 @@ class PetSelectionScreen extends StatelessWidget {
     required this.selectedSpecies,
     required this.onSpeciesSelected,
     required this.onNext,
+    required this.onBack,
   });
 
   final PetSpecies? selectedSpecies;
   final ValueChanged<PetSpecies> onSpeciesSelected;
   final VoidCallback onNext;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escolha seu pet')),
+      appBar: AppBar(
+        title: const Text('Escolha seu pet'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: onBack,
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

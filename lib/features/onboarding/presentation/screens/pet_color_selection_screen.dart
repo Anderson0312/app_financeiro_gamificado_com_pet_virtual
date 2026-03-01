@@ -15,11 +15,13 @@ class PetColorSelectionScreen extends StatefulWidget {
     required this.species,
     required this.onColorSelected,
     required this.onNext,
+    required this.onBack,
   });
 
   final PetSpecies species;
   final ValueChanged<PetColors?> onColorSelected;
   final VoidCallback onNext;
+  final VoidCallback onBack;
 
   @override
   State<PetColorSelectionScreen> createState() =>
@@ -209,7 +211,11 @@ class _PetColorSelectionScreenState extends State<PetColorSelectionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escolha as cores'),
+        title: const Text('Personalize as cores'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: widget.onBack,
+        ),
       ),
       body: SafeArea(
         child: Column(
