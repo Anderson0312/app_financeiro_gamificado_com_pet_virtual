@@ -139,19 +139,20 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                 alignment: Alignment.bottomCenter,
                 clipBehavior: Clip.none,
                 children: [
+                  // CAMADA 0: ASAS (Chibi Style - Mais para fora)
                   Positioned(
-                    top: widget.size * 0.25, 
-                    left: widget.size * 0.02, 
+                    top: widget.size * 0.28, 
+                    left: -widget.size * 0.10, 
                     child: CustomPaint(
-                      size: const Size(120, 100),
+                      size: Size(widget.size * 0.4, widget.size * 0.3), // Tamanho aumentado para destaque
                       painter: DragonWingPainter(mainColor, outlineColor, _strokeW, true, _wingsController.value),
                     ),
                   ),
                   Positioned(
-                    top: widget.size * 0.25, 
-                    right: widget.size * 0.02, 
+                    top: widget.size * 0.28, 
+                    right: -widget.size * 0.10, 
                     child: CustomPaint(
-                      size: const Size(120, 100),
+                      size: Size(widget.size * 0.4, widget.size * 0.3), // Tamanho aumentado para destaque
                       painter: DragonWingPainter(mainColor, outlineColor, _strokeW, false, _wingsController.value),
                     ),
                   ),
@@ -177,8 +178,23 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                            alignment: Alignment.center,
                            clipBehavior: Clip.none,
                            children: [
-                             Positioned(top: -headSize * 0.1, left: headSize * 0.15, child: _buildHorn(Colors.amber[200]!, outlineColor, headSize)),
-                             Positioned(top: -headSize * 0.1, right: headSize * 0.15, child: _buildHorn(Colors.amber[200]!, outlineColor, headSize)),
+                             // Chifres Pontudos (Dragon Style - Ajustados)
+                             Positioned(
+                               top: -headSize * 0.22, 
+                               left: headSize * 0.12, // Um pouco mais para dentro
+                               child: _buildPointyHorn(Colors.amber[100]!, outlineColor, headSize, true),
+                             ),
+                             Positioned(
+                               top: -headSize * 0.22, 
+                               right: headSize * 0.12, // Um pouco mais para dentro
+                               child: _buildPointyHorn(Colors.amber[100]!, outlineColor, headSize, false),
+                             ),
+
+                             // 1 Espinho centralizado na cabeça
+                             Positioned(
+                               top: -headSize *  0.05,
+                               child: _buildHeadSpikes(mainColor, outlineColor, headSize),
+                             ),
                              
                              Container(
                                width: headSize, 
@@ -195,24 +211,37 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                                child: _buildKawaiiEyes(headSize),
                              ),
 
+                             // Focinho + Fumaça
                              Positioned(
-                               bottom: headSize * 0.25,
+                               bottom: headSize * 0.18, // Ajustado para dar profundidade
                                child: Stack(
                                  alignment: Alignment.center,
                                  clipBehavior: Clip.none,
                                  children: [
+                                   // Muzzle (Focinho) - Reduzido em 30% (de 0.6x0.35 para 0.42x0.24)
+                                   Container(
+                                     width: headSize * 0.42,
+                                     height: headSize * 0.24,
+                                     decoration: BoxDecoration(
+                                       color: mainColor.withOpacity(0.9),
+                                       borderRadius: BorderRadius.circular(20),
+                                       border: Border.all(color: outlineColor.withOpacity(0.3), width: 1),
+                                     ),
+                                   ),
+                                   // Narinas Realistas
                                    Row(
                                      children: [
                                        _nostril(outlineColor),
-                                       const SizedBox(width: 20),
+                                       const SizedBox(width: 15), // Reduzido espaçamento
                                        _nostril(outlineColor),
                                      ],
                                    ),
+                                   // Fumaça animada nas narinas
                                    if (widget.mood != PetMood.sad)
                                      Positioned(
-                                       top: -10,
+                                       top: -8,
                                        child: CustomPaint(
-                                         size: const Size(40, 40),
+                                         size: const Size(35, 35),
                                          painter: SmokePainter(_smokeController.value),
                                        ),
                                      ),
@@ -220,22 +249,26 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                                ),
                              ),
 
+                             // Boca + Sopro de Fogo
                              Positioned(
-                               bottom: headSize * 0.05,
+                               bottom: headSize * 0.08,
                                child: Stack(
                                  alignment: Alignment.topCenter,
                                  clipBehavior: Clip.none,
                                  children: [
+                                   // Sopro de Fogo
                                    if (_fireController.isAnimating)
                                      Positioned(
-                                       top: 5,
+                                       top: 10,
                                        child: CustomPaint(
                                          size: const Size(120, 180),
                                          painter: FireBreathPainter(_fireController.value),
                                        ),
                                      ),
+                                   
+                                   // Boca Aberta com Presas
                                    CustomPaint(
-                                     size: const Size(28, 12),
+                                     size: Size(headSize * 0.45, 25),
                                      painter: DragonMouthPainter(outlineColor, _strokeW),
                                    ),
                                  ],
@@ -255,19 +288,29 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
     );
   }
 
-  Widget _buildHorn(Color color, Color outline, double headSize) => Container(
-    width: headSize * 0.15, 
-    height: headSize * 0.25, 
-    decoration: BoxDecoration(
-      color: color, 
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(5), bottom: Radius.circular(15)), 
-      border: Border.all(color: outline, width: _strokeW),
-    ),
-  );
+  Widget _buildPointyHorn(Color color, Color outline, double headSize, bool left) {
+    return Transform.rotate(
+      angle: left ? 0.18 : -0.18, // Menos inclinado para dentro
+      child: CustomPaint(
+        size: Size(headSize * 0.25, headSize * 0.45),
+        painter: DragonHornPainter(color, outline, _strokeW, left),
+      ),
+    );
+  }
+
+  Widget _buildHeadSpikes(Color color, Color outline, double headSize) {
+    return CustomPaint(
+      size: Size(headSize * 0.15, headSize * 0.15), // Menor e único
+      painter: DragonHeadSpikesPainter(color, outline, _strokeW),
+    );
+  }
 
   Widget _nostril(Color color) => Container(
-    width: 4, height: 4, 
-    decoration: BoxDecoration(color: color.withOpacity(0.5), shape: BoxShape.circle),
+    width: 6, height: 10, // Formato mais alongado e "realista"
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.7), 
+      borderRadius: BorderRadius.circular(4),
+    ),
   );
 
   Widget _buildKawaiiEyes(double headSize) {
@@ -337,6 +380,9 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                     borderRadius: BorderRadius.circular(45),
                     border: Border.all(color: outline.withOpacity(0.2), width: 1),
                   ),
+                  child: CustomPaint(
+                    painter: BellyLinesPainter(outline, _strokeW),
+                  ),
                 ),
               ),
               Positioned.fill(
@@ -382,16 +428,180 @@ class DragonMouthPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
+      ..color = color.withOpacity(0.8)
+      ..strokeWidth = strokeW * 1.2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final fillPaint = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.fill;
+
+    final fangPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    // Boca Aberta (Formato de semicírculo/U)
+    path.moveTo(0, 0);
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height * 1.5,
+      size.width,
+      0,
+    );
+    
+    // Preenche o interior da boca
+    canvas.drawPath(path, fillPaint);
+    // Desenha o contorno da boca
+    canvas.drawPath(path, paint);
+
+    // 🦷 Presas (Duas pequenas presas brancas saindo do topo da boca)
+    final fangW = size.width * 0.15;
+    final fangH = size.height * 0.4;
+
+    // Presa Esquerda
+    final leftFang = Path();
+    leftFang.moveTo(size.width * 0.2, 0);
+    leftFang.lineTo(size.width * 0.2 + fangW / 2, fangH);
+    leftFang.lineTo(size.width * 0.2 + fangW, 0);
+    leftFang.close();
+    canvas.drawPath(leftFang, fangPaint);
+
+    // Presa Direita
+    final rightFang = Path();
+    rightFang.moveTo(size.width * 0.8 - fangW, 0);
+    rightFang.lineTo(size.width * 0.8 - fangW / 2, fangH);
+    rightFang.lineTo(size.width * 0.8, 0);
+    rightFang.close();
+    canvas.drawPath(rightFang, fangPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DragonHornPainter extends CustomPainter {
+  final Color color;
+  final Color outline;
+  final double strokeW;
+  final bool isLeft;
+  DragonHornPainter(this.color, this.outline, this.strokeW, this.isLeft);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color..style = PaintingStyle.fill;
+    final paintOutline = Paint()
+      ..color = outline
       ..strokeWidth = strokeW
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    path.moveTo(0, size.height * 0.2);
-    path.quadraticBezierTo(size.width * 0.25, size.height, size.width / 2, size.height * 0.2);
-    path.quadraticBezierTo(size.width * 0.75, size.height, size.width, size.height * 0.2);
+    // Chifre Pontudo e curvado para dentro (curvatura reduzida)
+    if (isLeft) {
+      // Chifre esquerdo apontando para a direita (dentro)
+      path.moveTo(size.width * 0.1, size.height);
+      path.quadraticBezierTo(
+        size.width * 0.2, // Ponto de controle mais próximo da reta para reduzir a curva
+        size.height * 0.4, 
+        size.width, 
+        0,
+      );
+      path.quadraticBezierTo(
+        size.width * 0.7, 
+        size.height * 0.5, 
+        size.width * 0.8, 
+        size.height,
+      );
+    } else {
+      // Chifre direito apontando para a esquerda (dentro)
+      path.moveTo(size.width * 0.9, size.height);
+      path.quadraticBezierTo(
+        size.width * 0.8, // Ponto de controle mais próximo da reta
+        size.height * 0.4, 
+        0, 
+        0,
+      );
+      path.quadraticBezierTo(
+        size.width * 0.3, 
+        size.height * 0.5, 
+        size.width * 0.2, 
+        size.height,
+      );
+    }
+    path.close();
+
     canvas.drawPath(path, paint);
+    canvas.drawPath(path, paintOutline);
+    
+    // Detalhes de ranhuras no chifre
+    final linePaint = Paint()
+      ..color = outline.withOpacity(0.2)
+      ..strokeWidth = 1.0;
+    
+    canvas.drawLine(Offset(size.width * 0.3, size.height * 0.7), Offset(size.width * 0.7, size.height * 0.7), linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DragonHeadSpikesPainter extends CustomPainter {
+  final Color color;
+  final Color outline;
+  final double strokeW;
+  DragonHeadSpikesPainter(this.color, this.outline, this.strokeW);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color..style = PaintingStyle.fill;
+    final paintOutline = Paint()
+      ..color = outline
+      ..strokeWidth = strokeW
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    // Apenas 1 espinho centralizado
+    path.moveTo(0, size.height);
+    path.lineTo(size.width / 2, 0);
+    path.lineTo(size.width, size.height);
+    path.close();
+    
+    canvas.drawPath(path, paint);
+    canvas.drawPath(path, paintOutline);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class BellyLinesPainter extends CustomPainter {
+  final Color outline;
+  final double strokeW;
+  BellyLinesPainter(this.outline, this.strokeW);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = outline.withOpacity(0.3)
+      ..strokeWidth = strokeW
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    for (int i = 1; i < 5; i++) {
+      double y = size.height * (i / 5);
+      final path = Path();
+      path.moveTo(size.width * 0.2, y);
+      path.quadraticBezierTo(
+        size.width * 0.5,
+        y + 10,
+        size.width * 0.8,
+        y,
+      );
+      canvas.drawPath(path, paint);
+    }
   }
 
   @override
@@ -440,24 +650,63 @@ class DragonWingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = color..style = PaintingStyle.fill;
-    final paintOutline = Paint()..color = outline..strokeWidth = strokeW..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round;
+    final paintOutline = Paint()
+      ..color = outline
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    final flapEffect = math.sin(flap * math.pi) * 20;
-    final path = Path();
+    final flapEffect = math.sin(flap * math.pi) * 15; // Aumentado para o novo design
     
-    if (isLeft) {
-      path.moveTo(size.width, size.height);
-      path.quadraticBezierTo(-flapEffect, size.height * 0.8, 0, flapEffect);
-      path.quadraticBezierTo(size.width * 0.5, size.height * 0.2 + flapEffect, size.width, size.height * 0.5);
-    } else {
-      path.moveTo(0, size.height);
-      path.quadraticBezierTo(size.width + flapEffect, size.height * 0.8, size.width, flapEffect);
-      path.quadraticBezierTo(size.width * 0.5, size.height * 0.2 + flapEffect, 0, size.height * 0.5);
-    }
+    // Normalização baseada no viewBox 200x200 do SVG original
+    final double xF = size.width / 200;
+    final double yF = size.height / 200;
+
+    double x(double val) => isLeft ? val * xF : (200 - val) * xF;
+    double y(double val) => (val * yF) + (isLeft ? flapEffect : flapEffect); // O flap afeta o Y
+
+    // 1️⃣ Caminho Principal da Asa (Membrana)
+    final path = Path();
+    // M 160 40
+    path.moveTo(x(160), y(40));
+    // Q 90 30, 20 110 (Ponta superior e ponta da asa)
+    path.quadraticBezierTo(x(90), y(30) + flapEffect, x(20), y(110) + flapEffect);
+    // Q 55 95, 80 140 (Arco 1)
+    path.quadraticBezierTo(x(55), y(95) + flapEffect, x(80), y(140) + flapEffect);
+    // Q 105 110, 130 145 (Arco 2)
+    path.quadraticBezierTo(x(105), y(110) + flapEffect, x(130), y(145) + flapEffect);
+    // Q 145 115, 160 90 (Arco 3 de volta ao corpo)
+    path.quadraticBezierTo(x(145), y(115) + flapEffect, x(160), y(90));
     path.close();
 
     canvas.drawPath(path, paint);
     canvas.drawPath(path, paintOutline);
+
+    // 2️⃣ Detalhes Internos (Ossos/Cartilagem do SVG)
+    final detailPaint = Paint()
+      ..color = outline.withOpacity(0.4)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Detalhe 1: M 85 53 Q 75 90, 80 140
+    final detailPath1 = Path();
+    detailPath1.moveTo(x(85), y(53) + flapEffect);
+    detailPath1.quadraticBezierTo(x(75), y(90) + flapEffect, x(80), y(140) + flapEffect);
+    canvas.drawPath(detailPath1, detailPaint);
+
+    // Detalhe 2: M 125 40 Q 120 90, 130 145
+    final detailPath2 = Path();
+    detailPath2.moveTo(x(125), y(40) + flapEffect);
+    detailPath2.quadraticBezierTo(x(120), y(90) + flapEffect, x(130), y(145) + flapEffect);
+    canvas.drawPath(detailPath2, detailPaint);
+    
+    // Braço principal para conectar tudo
+    final armPath = Path();
+    armPath.moveTo(x(160), y(40));
+    armPath.lineTo(x(160), y(90));
+    canvas.drawPath(armPath, detailPaint);
   }
 
   @override
