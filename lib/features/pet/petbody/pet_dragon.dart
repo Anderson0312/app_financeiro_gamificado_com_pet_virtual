@@ -142,27 +142,28 @@ class _FullBodyDragonWidgetState extends State<FullBodyDragonWidget> with Ticker
                   // CAMADA 0: ASAS (Chibi Style - Mais para fora)
                   Positioned(
                     top: widget.size * 0.28, 
-                    left: -widget.size * 0.10, 
+                    left: -widget.size * 0.22, 
                     child: CustomPaint(
-                      size: Size(widget.size * 0.4, widget.size * 0.3), // Tamanho aumentado para destaque
+                      size: Size(widget.size * 0.6, widget.size * 0.5), // Tamanho aumentado para destaque
                       painter: DragonWingPainter(mainColor, outlineColor, _strokeW, true, _wingsController.value),
                     ),
                   ),
                   Positioned(
                     top: widget.size * 0.28, 
-                    right: -widget.size * 0.10, 
+                    right: -widget.size * 0.22, 
                     child: CustomPaint(
-                      size: Size(widget.size * 0.4, widget.size * 0.3), // Tamanho aumentado para destaque
+                      size: Size(widget.size * 0.6, widget.size * 0.5), // Tamanho aumentado para destaque
                       painter: DragonWingPainter(mainColor, outlineColor, _strokeW, false, _wingsController.value),
                     ),
                   ),
 
+                  // CAMADA 1: RABO (Estilo SVG - Lado Esquerdo - Parado no chão)
                   Positioned(
-                    bottom: widget.size * 0.15,
-                    right: widget.size * 0.05,
+                    top: widget.size * 0.25, // Encostado no chão
+                    left: -widget.size * -0.5, 
                     child: CustomPaint(
-                      size: const Size(100, 120),
-                      painter: DragonTailPainter(mainColor, outlineColor, _strokeW, _tailController.value),
+                      size: Size(widget.size * 0.6, widget.size * 0.6),
+                      painter: DragonTailPainter(mainColor, bellyColor, outlineColor, _strokeW, true),
                     ),
                   ),
 
@@ -610,29 +611,65 @@ class BellyLinesPainter extends CustomPainter {
 
 class DragonTailPainter extends CustomPainter {
   final Color color;
+  final Color bellyColor;
   final Color outline;
   final double strokeW;
-  final double animation;
-  DragonTailPainter(this.color, this.outline, this.strokeW, this.animation);
+  final bool isLeft;
+  DragonTailPainter(this.color, this.bellyColor, this.outline, this.strokeW, this.isLeft);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color..style = PaintingStyle.fill;
-    final paintOutline = Paint()..color = outline..strokeWidth = strokeW..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    final wave = math.sin(animation * math.pi * 2) * 15;
+    final double xF = size.width / 200;
+    final double yF = size.height / 200;
     
-    path.moveTo(0, size.height * 0.8);
-    path.quadraticBezierTo(size.width * 0.2 + wave, size.height * 0.4, size.width * 0.6 + wave, 0);
-    path.lineTo(size.width * 0.9 + wave, size.height * 0.1);
-    path.lineTo(size.width * 0.7 + wave, size.height * 0.3);
-    path.lineTo(size.width * 0.8 + wave, size.height * 0.5);
-    path.quadraticBezierTo(size.width * 0.3 + wave, size.height * 0.7, 0, size.height);
-    path.close();
+    double x(double val) => isLeft ? (200 - val) * xF : val * xF;
+    double y(double val) => val * yF;
 
-    canvas.drawPath(path, paint);
-    canvas.drawPath(path, paintOutline);
+    final paintMain = Paint()..color = color..style = PaintingStyle.fill;
+    final paintBelly = Paint()..color = bellyColor..style = PaintingStyle.fill;
+    final paintOutline = Paint()
+      ..color = outline
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // 1️⃣ Corpo Principal do Rabo (Camada de Baixo)
+    // path d="M 150 140 Q 40 140, 30 80 Q 60 210, 170 190 Z"
+    final tailBase = Path();
+    tailBase.moveTo(x(150), y(140));
+    tailBase.quadraticBezierTo(x(40), y(140), x(30), y(80));
+    tailBase.quadraticBezierTo(x(60), y(210), x(170), y(190));
+    tailBase.close();
+    canvas.drawPath(tailBase, paintMain);
+    canvas.drawPath(tailBase, paintOutline);
+
+    // 2️⃣ Parte de cima (Belly) do Rabo
+    // path d="M 150 140 Q 40 140, 30 80 Q 55 160, 155 165 Z"
+    final tailHighlight = Path();
+    tailHighlight.moveTo(x(150), y(140));
+    tailHighlight.quadraticBezierTo(x(40), y(140), x(30), y(80));
+    tailHighlight.quadraticBezierTo(x(55), y(160), x(155), y(165));
+    tailHighlight.close();
+    canvas.drawPath(tailHighlight, paintBelly);
+    canvas.drawPath(tailHighlight, paintOutline);
+
+    // 3️⃣ Linhas de Detalhe na barriga
+    final linePaint = Paint()..color = outline..strokeWidth = 1.5..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(x(40), y(101)), Offset(x(45), y(112)), linePaint);
+    canvas.drawLine(Offset(x(55), y(125)), Offset(x(62), y(140)), linePaint);
+    canvas.drawLine(Offset(x(80), y(137)), Offset(x(85), y(156)), linePaint);
+    canvas.drawLine(Offset(x(115), y(140)), Offset(x(118), y(162)), linePaint);
+
+    // 4️⃣ Ponta do Rabo (Triângulo/Seta)
+    // path d="M 15 90 L 5 40 L 55 60 Z"
+    final tailTip = Path();
+    tailTip.moveTo(x(15), y(90));
+    tailTip.lineTo(x(5), y(40));
+    tailTip.lineTo(x(55), y(60));
+    tailTip.close();
+    canvas.drawPath(tailTip, paintMain);
+    canvas.drawPath(tailTip, paintOutline);
   }
 
   @override
