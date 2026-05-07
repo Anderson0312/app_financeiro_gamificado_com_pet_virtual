@@ -19,6 +19,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _targetController = TextEditingController();
+  final _initialAmountController = TextEditingController();
 
   bool _isMonthly = true;
 
@@ -26,6 +27,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   void dispose() {
     _titleController.dispose();
     _targetController.dispose();
+    _initialAmountController.dispose();
     super.dispose();
   }
 
@@ -40,11 +42,26 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       return;
     }
 
+    final initialAmount =
+        double.tryParse(_initialAmountController.text.replaceAll(',', '.')) ?? 0;
+    if (initialAmount < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Valor inicial não pode ser negativo')),
+      );
+      return;
+    }
+    if (initialAmount > target) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Valor inicial não pode ser maior que a meta')),
+      );
+      return;
+    }
+
     final goal = Goal(
       id: const Uuid().v4(),
       title: _titleController.text.trim(),
       targetAmount: target,
-      currentAmount: 0,
+      currentAmount: initialAmount,
       isMonthly: _isMonthly,
       deadline: _isMonthly ? _endOfCurrentMonth() : null,
     );
@@ -95,6 +112,23 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                   if (v == null || v.trim().isEmpty) return 'Digite o valor';
                   final n = double.tryParse(v.replaceAll(',', '.'));
                   if (n == null || n <= 0) return 'Valor inválido';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _initialAmountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Valor já poupado (opcional)',
+                  prefixText: 'R\$ ',
+                  helperText:
+                      'Se você já começou a guardar para esta meta, informe quanto já tem.',
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  final n = double.tryParse(v.replaceAll(',', '.'));
+                  if (n == null || n < 0) return 'Valor inválido';
                   return null;
                 },
               ),

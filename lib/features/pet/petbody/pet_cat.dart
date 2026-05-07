@@ -93,8 +93,8 @@ class _FullBodyCatWidgetState extends State<FullBodyCatWidget> with TickerProvid
     
     final headH = widget.size * 0.56;
     final headW = widget.size * 0.68;
-    final bodyH = widget.size * 0.49;
-    final bodyW = widget.size * 0.55;
+    final bodyH = widget.size * 0.59; // Aumentado em ~20% (de 0.49 para 0.59)
+    final bodyW = widget.size * 0.44; // Reduzido em ~20% (de 0.55 para 0.44)
 
     return AnimatedBuilder(
       animation: Listenable.merge([_breath, _jump, _blink, _tail]),
@@ -130,7 +130,7 @@ class _FullBodyCatWidgetState extends State<FullBodyCatWidget> with TickerProvid
 
                 /// HEAD
                 Positioned(
-                  top: widget.size * 0.05,
+                  top: widget.size * 0.02, // Ajustado de 0.05 para 0.02 para subir a cabeça
                   child: Transform.translate(
                     offset: Offset(0, _breath.value * 4), 
                     child: SizedBox(

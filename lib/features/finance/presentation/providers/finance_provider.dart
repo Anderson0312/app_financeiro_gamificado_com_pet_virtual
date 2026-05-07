@@ -39,3 +39,46 @@ final activeMonthlyGoalProvider = FutureProvider<Goal?>((ref) async {
 
   return goal.copyWith(currentAmount: currentAmount);
 });
+
+class FinancialSummary {
+  const FinancialSummary({
+    required this.incomeTotal,
+    required this.expenseTotal,
+    required this.balance,
+  });
+
+  final double incomeTotal;
+  final double expenseTotal;
+  final double balance;
+}
+
+enum TransactionFilterPeriod {
+  all,
+  thisMonth,
+}
+
+final transactionFilterPeriodProvider =
+    StateProvider<TransactionFilterPeriod>((ref) {
+  return TransactionFilterPeriod.all;
+});
+
+final financialSummaryProvider =
+    Provider<AsyncValue<FinancialSummary>>((ref) {
+  final transactionsAsync = ref.watch(transactionsProvider);
+
+  return transactionsAsync.whenData((transactions) {
+    final incomeTotal = transactions
+        .where((t) => t.type == TransactionType.income)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+    final expenseTotal = transactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+    final balance = incomeTotal - expenseTotal;
+
+    return FinancialSummary(
+      incomeTotal: incomeTotal,
+      expenseTotal: expenseTotal,
+      balance: balance,
+    );
+  });
+});
